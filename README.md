@@ -1,0 +1,1 @@
+Application for final project of Algorithm course. Django project for backtesting some crypto assets on Bitmex exchange

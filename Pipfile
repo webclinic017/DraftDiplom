@@ -1,0 +1,19 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+python-json-logger = "*"
+JSON-log-formatter = "*"
+Django = "*"
+"psycopg2-binary" = "*"
+gunicorn = "*"
+djangorestframework = "*"
+requests = "*"
+python-logstash = "*"
+ipython = "*"
+backtrader = "*"
+
+[requires]
+python_version = "3.7"

@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.egg-info/
+.tox/
+.coverage*
+.pytest_cache/
+.idea/
+venv/
+/config/logstash/logfile.json
+/config/gunicorn/gunicorn-acc.log
+/config/gunicorn/gunicorn-err.log

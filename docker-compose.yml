@@ -1,0 +1,132 @@
+version: '3.2'
+
+services:
+  database:
+    image: postgres:10
+    volumes:
+      - database_volume:/var/lib/postgresql/data
+    env_file:
+      - config/db/database_env
+    networks:
+      - database_network
+  djangoapp:
+    build: .
+    environment:
+      - DJANGO_SETTINGS_MODULE
+    depends_on:
+      - database
+      - es
+      - kibana
+    expose:
+      - "5959"
+    logging:
+      driver: "json-file"
+    networks:
+      - database_network
+      - nginx_network
+    volumes:
+      - .:/opt/services/djangoapp/src
+      - static:/opt/services/djangoapp/static
+      - media:/opt/services/djangoapp/media
+  nginx:
+    image: nginx:1.13
+    ports:
+      - 8000:80
+    volumes:
+      - ./config/nginx/conf.d:/etc/nginx/conf.d
+      - static:/opt/services/djangoapp/static
+      - media:/opt/services/djangoapp/media
+    networks:
+      - nginx_network
+    depends_on:
+      - djangoapp
+  es:
+    image: elasticsearch:5.4
+    volumes:
+      - esdata:/usr/share/elasticsearch/data/
+    ports:
+      - "9200:9200"
+    environment:
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+  kibana:
+    image: kibana:5.4.3
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_URL=http://es:9200
+    depends_on:
+      - es
+  logstash:
+    image: logstash:5.4.3
+    volumes:
+      - ./config/logstash:/logstash_dir
+      - ./config/logstash/log:/var/log/logstash
+    command: logstash -f /logstash_dir/logstash.conf
+    depends_on:
+      - es
+    ports:
+      - "5959:5959"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+  influxdb:
+    image: influxdb:1.7.9
+    ports:
+      - "8083:8083"
+      - "8086:8086"
+    volumes:
+      - influxdb:/var/lib/influxdb
+    restart: always
+  grafana:
+    image: grafana/grafana:6.5.0
+    ports:
+      - "3000:3000"
+    links:
+      - influxdb
+    volumes:
+      - grafanadata:/var/lib/grafana
+    restart: always
+  telegraf:
+    image: telegraf:1.13.0
+    volumes:
+      - ./config/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+
+
+networks:
+  database_network:
+    driver: bridge
+  nginx_network:
+    driver: bridge
+
+volumes:
+  database_volume:
+  static:
+  media:
+  elasticsearch:
+  esdata:
+  influxdb:
+  grafanadata:
+
+
+
+
+
+
+
+
+
+
+
